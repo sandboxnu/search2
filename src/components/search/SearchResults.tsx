@@ -2,7 +2,15 @@
 
 import { ResultCard } from "./ResultCard";
 import { useParams, useSearchParams } from "next/navigation";
-import { memo, Suspense, use, useDeferredValue } from "react";
+import {
+  memo,
+  Suspense,
+  use,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 interface searchResult {
   name: string;
@@ -54,8 +62,11 @@ function fetcher<T>(key: string, p: () => string) {
 // the searchParams and the memo shields the extra fetching requests
 const ResultsList = memo(function ResultsList(props: { params: string }) {
   const { term, course } = useParams();
+  const [displayCount, setDisplayCount] = useState(10);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
-  const results = use(
+  const allResults = use(
     fetcher<searchResult[]>(props.params + term?.toString(), () => {
       const searchP = new URLSearchParams(props.params);
       searchP.set("term", term?.toString() ?? "");
@@ -63,23 +74,77 @@ const ResultsList = memo(function ResultsList(props: { params: string }) {
     }),
   );
 
-  if (results.length < 0) {
+  if (allResults.length < 0) {
     return <p>No results</p>;
   }
 
+  useEffect(() => {
+    if (!loaderRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+        if (firstEntry.isIntersecting && displayCount < allResults.length) {
+          setTimeout(() => {
+            setDisplayCount((prev) => Math.min(prev + 5, allResults.length));
+          }, 500); // Simulate a delay
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(loaderRef.current);
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
+  }, [displayCount, allResults.length]);
+
+  useEffect(() => {
+    setDisplayCount(10);
+
+    // Find the scrollable container (parent div with overflow-y-scroll)
+    const scrollContainer = document.querySelector(
+      ".flex-col.overflow-y-scroll",
+    );
+    if (scrollContainer instanceof HTMLElement) {
+      console.log("DENNIS SCROLLING TO TOP");
+      scrollContainer.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } else {
+      console.log("Failed to find scroll container");
+    }
+  }, [props.params, term]);
+
   return (
-    <ul className="space-y-4">
-      {results.map((result, index) => (
-        <ResultCard
-          key={index}
-          result={result}
-          link={`/catalog/${term?.toString()}/${result.subject}%20${result.courseNumber}?${props.params}`}
-          active={
-            decodeURIComponent(course?.toString() ?? "") ===
-            result.subject + " " + result.courseNumber
-          }
-        />
-      ))}
+    <ul className="space-y-4" ref={listRef}>
+      {allResults.map((result, index) => {
+        if (index > displayCount) return null;
+        return (
+          <ResultCard
+            key={index}
+            result={result}
+            link={`/catalog/${term?.toString()}/${result.subject}%20${result.courseNumber}?${props.params}`}
+            active={
+              decodeURIComponent(course?.toString() ?? "") ===
+              result.subject + " " + result.courseNumber
+            }
+          />
+        );
+      })}
+
+      {displayCount < allResults.length && (
+        <div ref={loaderRef}>
+          <p>Loading more results...</p>
+        </div>
+      )}
+
+      <div>
+        Showing {Math.min(allResults.length, displayCount)} of{" "}
+        {allResults.length} results
+      </div>
     </ul>
   );
 });
