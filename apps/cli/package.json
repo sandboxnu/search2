@@ -9,7 +9,7 @@
     "cli": "node --env-file .env --import tsx ./src/cli.ts"
   },
   "dependencies": {
-    "@clack/prompts": "^1.5.0",
+    "@clack/prompts": "^1.7.0",
     "@sneu/db": "workspace:*",
     "@sneu/scraper": "workspace:*",
     "citty": "^0.2.2",
@@ -21,9 +21,9 @@
   "devDependencies": {
     "@sneu/eslint-config": "workspace:*",
     "@sneu/tsconfig": "workspace:*",
-    "@types/node": "^25.9.1",
-    "eslint": "^9.39.4",
-    "tsx": "^4.22.4",
+    "@types/node": "^25.9.5",
+    "eslint": "^9.39.5",
+    "tsx": "^4.23.1",
     "typescript": "^6.0.3"
   }
 }
