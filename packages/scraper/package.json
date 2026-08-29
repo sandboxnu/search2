@@ -58,7 +58,7 @@
   "dependencies": {
     "drizzle-orm": "^0.45.2",
     "html-entities": "^2.6.0",
-    "node-html-parser": "^7.1.0",
+    "node-html-parser": "^9.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -70,6 +70,6 @@
     "eslint": "^9.39.4",
     "nock": "^14.0.15",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   }
 }
